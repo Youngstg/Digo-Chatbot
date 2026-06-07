@@ -1,0 +1,31 @@
+# ===========================
+# AI Sales Assistant Chatbot
+# ===========================
+
+# Backend (Laravel)
+backend/.env
+backend/vendor/
+backend/node_modules/
+backend/storage/logs/*.log
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/*.php
+backend/.phpunit.cache/
+backend/public/hot
+
+# Frontend (React/Vite)
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
