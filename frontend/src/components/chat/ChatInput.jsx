@@ -31,7 +31,7 @@ export default function ChatInput({ onSend, disabled = false }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-end gap-2 px-4 py-3 border-t border-gray-100 bg-white"
+      className="flex items-end gap-3 p-4 bg-white border border-[#7288AE] rounded-2xl shadow-xl"
     >
       <textarea
         ref={textareaRef}
@@ -42,23 +42,24 @@ export default function ChatInput({ onSend, disabled = false }) {
         disabled={disabled}
         rows={1}
         className="
-          flex-1 resize-none border border-gray-200 rounded-xl px-3 py-2
-          text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-          disabled:opacity-50 disabled:bg-gray-50 min-h-[40px] max-h-[120px]
-          placeholder:text-gray-400 transition-all
+          flex-1 resize-none border-0 bg-transparent px-2 py-2
+          text-base text-[#111844] focus:outline-none focus:ring-0
+          disabled:opacity-50 min-h-[44px] max-h-[120px]
+          placeholder:text-[#7288AE] transition-all
         "
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
         className="
-          bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
-          text-white rounded-xl px-4 h-10 text-sm font-medium transition-colors
-          flex items-center gap-1 flex-shrink-0
+          bg-[#111844] hover:bg-[#4B5694] disabled:opacity-50 disabled:bg-[#7288AE] disabled:cursor-not-allowed
+          text-[#EAE0CF] rounded-xl px-5 h-11 text-sm font-semibold shadow transition-colors
+          flex items-center gap-2 flex-shrink-0
         "
       >
+        <span>Kirim</span>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
         </svg>
       </button>
     </form>

@@ -8,41 +8,37 @@ export default function ChatPage() {
   const { conversationId } = useChatContext()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md flex flex-col gap-4">
-        {/* Chat Widget */}
-        <div className="h-[580px] shadow-2xl rounded-2xl overflow-hidden border border-white/50">
-          <ChatWidget />
-        </div>
-
-        {/* Lead Form Toggle */}
-        {!showLeadForm ? (
-          <button
-            onClick={() => setShowLeadForm(true)}
-            className="
-              w-full py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium
-              rounded-xl shadow border border-gray-100 transition-colors
-            "
-          >
-            💬 Ingin dihubungi tim kami? Klik di sini
-          </button>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between px-4 pt-4">
-              <span className="text-sm text-gray-500">Form Kontak</span>
-              <button
-                onClick={() => setShowLeadForm(false)}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-              >
-                ×
-              </button>
-            </div>
-            <LeadForm
-              conversationId={conversationId}
-              onSuccess={() => setTimeout(() => setShowLeadForm(false), 3000)}
-            />
+    <div className="h-screen w-full bg-white flex flex-col relative overflow-hidden font-sans">
+      
+      {/* Floating Lead Form Toggle */}
+      {!showLeadForm ? (
+        <button
+          onClick={() => setShowLeadForm(true)}
+          className="absolute top-4 right-4 z-50 px-4 py-2 bg-white text-[#111844] text-sm font-medium rounded-xl shadow-md border border-[#7288AE]/30 hover:bg-[#EAE0CF] transition-colors"
+        >
+          Hubungi Tim Kami
+        </button>
+      ) : (
+        <div className="absolute top-16 right-4 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-[#7288AE]/50">
+          <div className="flex items-center justify-between px-4 pt-4">
+            <span className="text-sm font-semibold text-[#111844]">Form Kontak</span>
+            <button
+              onClick={() => setShowLeadForm(false)}
+              className="text-[#7288AE] hover:text-[#111844] text-xl leading-none"
+            >
+              ×
+            </button>
           </div>
-        )}
+          <LeadForm
+            conversationId={conversationId}
+            onSuccess={() => setTimeout(() => setShowLeadForm(false), 3000)}
+          />
+        </div>
+      )}
+
+      {/* Fullscreen Chat Widget */}
+      <div className="flex-1 w-full h-full">
+        <ChatWidget />
       </div>
     </div>
   )
