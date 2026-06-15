@@ -1,8 +1,21 @@
-# AI Sales Assistant for Digital Agency - Digo 🤖
+<div align="center">
+  <img src="frontend/public/image/Logo_only.png" alt="Digo Chatbot Logo" width="180" />
 
-AI Sales Assistant (Digo) adalah chatbot berbasis Large Language Model (LLM) yang dirancang untuk membantu calon pelanggan memahami layanan digital agency secara interaktif, natural, dan asinkron.
+  # AI Sales Assistant for Digital Agency - Digo 🤖
 
-Aplikasi ini mengintegrasikan **Laravel 12** sebagai backend controller & business logic dengan **React (Vite + Tailwind CSS v4)** sebagai widget chat web, serta mendukung integrasi webhook instan ke **Telegram Bot** dan **WhatsApp Gateway**.
+  <p align="center">
+    <a href="https://laravel.com/"><img src="https://skillicons.dev/icons?i=laravel,php,mysql" alt="Backend Stack" /></a>
+    <a href="https://react.dev/"><img src="https://skillicons.dev/icons?i=react,tailwind,vite,js" alt="Frontend Stack" /></a>
+  </p>
+
+  <p align="center">
+    <strong>Asisten Penjualan Cerdas Bertenaga AI untuk Agensi Digital</strong>
+  </p>
+</div>
+
+---
+
+**AI Sales Assistant (Digo)** adalah chatbot berbasis Large Language Model (LLM) yang dirancang untuk membantu calon pelanggan memahami layanan digital agency secara interaktif, natural, dan asinkron. Aplikasi ini mengintegrasikan **Laravel 12** sebagai *backend controller* dengan **React (Vite + Tailwind CSS v4)** sebagai antarmuka *widget chat web*, serta mendukung integrasi *webhook* instan ke **Telegram Bot** dan **WhatsApp Gateway**.
 
 ---
 
