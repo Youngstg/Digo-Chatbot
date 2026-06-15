@@ -4,8 +4,8 @@
   # AI Sales Assistant for Digital Agency - Digo 🤖
 
   <p align="center">
-    <a href="https://laravel.com/"><img src="https://skillicons.dev/icons?i=laravel,php,mysql" alt="Backend Stack" /></a>
-    <a href="https://react.dev/"><img src="https://skillicons.dev/icons?i=react,tailwind,vite,js" alt="Frontend Stack" /></a>
+    <img src="https://skillicons.dev/icons?i=laravel,php,mysql" alt="Backend Stack" />
+    <img src="https://skillicons.dev/icons?i=react,tailwind,vite,js" alt="Frontend Stack" />
   </p>
 
   <p align="center">
