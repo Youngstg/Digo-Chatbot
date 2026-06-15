@@ -9,64 +9,68 @@
   </p>
 
   <p align="center">
-    <strong>Asisten Penjualan Cerdas Bertenaga AI untuk Agensi Digital</strong>
+    <strong>Smart AI-Powered Sales Assistant for Digital Agencies</strong>
+  </p>
+
+  <p align="center">
+    <a href="README.md">🇺🇸 English</a> | <a href="README_IDN.md">🇮🇩 Bahasa Indonesia</a>
   </p>
 </div>
 
 ---
 
-**AI Sales Assistant (Digo)** adalah chatbot berbasis Large Language Model (LLM) yang dirancang untuk membantu calon pelanggan memahami layanan digital agency secara interaktif, natural, dan asinkron. Aplikasi ini mengintegrasikan **Laravel 12** sebagai *backend controller* dengan **React (Vite + Tailwind CSS v4)** sebagai antarmuka *widget chat web*, serta mendukung integrasi *webhook* instan ke **Telegram Bot** dan **WhatsApp Gateway**.
+**AI Sales Assistant (Digo)** is a Large Language Model (LLM) based chatbot designed to help potential clients understand digital agency services interactively, naturally, and asynchronously. This application integrates **Laravel 12** as the *backend controller* with **React (Vite + Tailwind CSS v4)** as the *web chat widget interface*, and supports instant *webhook* integration to **Telegram Bot** and **WhatsApp Gateway**.
 
 ---
 
-## 🚀 Fitur Utama (Progress Saat Ini)
+## 🚀 Key Features (Current Progress)
 
 ### 1. Multi-Channel Chatbot
-* **Web Chat Widget:** Antarmuka web modern dengan Tailwind CSS v4 yang interaktif.
-* **Telegram Bot Integration:** Mendukung command `/start`, `/clear`, `/end`, dan `/help`.
-* **WhatsApp Gateway:** Terintegrasi dengan Meta WhatsApp Cloud API serta opsi gateway lokal via **Fonnte**.
+* **Web Chat Widget:** Modern web interface built with Tailwind CSS v4.
+* **Telegram Bot Integration:** Supports `/start`, `/clear`, `/end`, and `/help` commands.
+* **WhatsApp Gateway:** Integrated with Meta WhatsApp Cloud API and local gateway options via **Fonnte**.
 
 ### 2. AI & Context Retrieval (RAG MVP)
-* **Contextual Knowledge Retrieval:** Sistem mencari informasi yang relevan dari database Layanan, Harga, Fitur, dan FAQ sebelum mengirimkannya ke AI.
-* **Persona Digo:** Persona asisten penjualan yang ramah, profesional, ringkas, dan fokus menggali kebutuhan klien tanpa memaksa.
-* **Clean Text Formatting:** Penyaringan teks otomatis untuk membersihkan simbol markdown (bintang ganda, dsb.) menjadi teks natural ramah platform pesan.
+* **Contextual Knowledge Retrieval:** The system retrieves relevant information from the Services, Pricing, Features, and FAQ database before sending it to the AI.
+* **Digo Persona:** A friendly, professional, and concise sales assistant persona focused on exploring client needs without being pushy.
+* **Clean Text Formatting:** Automatic text filtering to clean markdown symbols (double asterisks, etc.) into natural text suitable for messaging platforms.
 
-### 3. Sistem Antrean & Anti-Spam (Asinkron)
-* **Laravel Database Queue:** Pemrosesan AI dilakukan di background agar Telegram/WhatsApp tidak timeout.
-* **Deduplication Filter:** Mengabaikan request ganda dengan ID yang sama dari webhook Telegram/Meta.
-* **Instant 200 OK Reply:** Mengirim sinyal terima cepat ke server pengirim untuk menghindari spam pengiriman ulang dari platform.
+### 3. Queue System & Anti-Spam (Asynchronous)
+* **Laravel Database Queue:** AI processing is done in the background to prevent Telegram/WhatsApp timeouts.
+* **Deduplication Filter:** Ignores duplicate requests with the same ID from Telegram/Meta webhooks.
+* **Instant 200 OK Reply:** Sends quick acknowledgement signals to the webhook server to prevent retry spam from the platforms.
 
-### 4. Sistem Auto-Fallback Gemini (Anti-Limit)
-Sistem memiliki pengalihan model otomatis menggunakan Cache Driver jika kuota harian model utama habis:
+### 4. Gemini Auto-Fallback System (Anti-Limit)
+The system has an automatic model switching mechanism using the Cache Driver if the primary model's daily quota is exhausted:
 1. `gemini-2.5-flash` (Primary - 20 RPD)
 2. `gemini-3.1-flash-lite` (Fallback 1 - 500 RPD)
 3. `gemma-4-27b-it` (Fallback 2 - 1.5K RPD)
-*Setiap model yang terkena rate limit (HTTP 429/503) akan masuk masa cooldown selama 1 jam.*
+*Any model that hits a rate limit (HTTP 429/503) will enter a 1-hour cooldown period.*
 
 ---
 
-## 📁 Struktur Folder Proyek
+## 📁 Project Folder Structure
 
 ```
 D:\chatbot_llm\
-├── docs/                           # Dokumentasi Proyek
-│   ├── api.md                      # Spesifikasi REST API & Webhook
-│   ├── database.md                 # Desain Database & Tabel MySQL
-│   └── architecture.md             # Alur Data & Fallback System
+├── docs/                           # Project Documentation
+│   ├── api.md                      # REST API & Webhook Specifications
+│   ├── database.md                 # Database Design & MySQL Tables
+│   └── architecture.md             # Data Flow & Fallback System
 │
 ├── backend/                        # Backend API (Laravel 12)
 │   ├── app/Http/Controllers/Api/   # Controllers (Chat, Lead, KB, Webhooks)
 │   ├── app/Jobs/                   # Background Processing (ProcessTelegramMessage)
-│   ├── app/Models/                 # Eloquent Models (Service, Lead, Message, dll)
+│   ├── app/Models/                 # Eloquent Models (Service, Lead, Message, etc.)
 │   ├── app/Repositories/           # Data Access Layer
 │   ├── app/Services/               # Core Logic (Gemini, Telegram, WhatsApp, KB)
 │   ├── app/Prompts/                # AI Prompt Template (SalesAssistantPrompt)
-│   ├── config/                     # Konfigurasi CORS & Third-party Services
+│   ├── config/                     # CORS & Third-party Services Configuration
 │   └── database/                   # Migrations & Seeders
 │
 └── frontend/                       # Frontend Web (React + Vite + Tailwind v4)
-    ├── src/components/             # ChatWidget, LeadForm, UI Reusable
-    ├── src/hooks/                  # useChat custom hook
+    ├── src/components/             # ChatWidget, LeadForm, Reusable UI
+    ├── src/hooks/                  # Custom useChat hook
     ├── src/pages/                  # ChatPage (Web Widget), AdminPage (Leads)
     ├── src/services/               # API call layer (Axios)
     └── src/store/                  # Chat Context State
@@ -74,22 +78,22 @@ D:\chatbot_llm\
 
 ---
 
-## 🛠️ Cara Memulai & Instalasi
+## 🛠️ Getting Started & Installation
 
-### Prasyarat
+### Prerequisites
 * PHP >= 8.2
-* Node.js >= 20.18 (Vite 5 terpasang untuk kompatibilitas)
+* Node.js >= 20.18 (Vite 5 installed for compatibility)
 * Composer
 * MySQL Database
 
-### 1. Setup Backend (Laravel)
+### 1. Backend Setup (Laravel)
 
-1. Masuk ke folder backend dan install dependensi:
+1. Navigate to the backend folder and install dependencies:
    ```bash
    cd backend
    composer install
    ```
-2. Salin file `.env.example` menjadi `.env` dan konfigurasikan database Anda:
+2. Copy `.env.example` to `.env` and configure your database:
    ```env
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
@@ -98,7 +102,7 @@ D:\chatbot_llm\
    DB_USERNAME=root
    DB_PASSWORD=your_password
    ```
-3. Tambahkan konfigurasi API key di `.env` (Google AI Studio & Platform Token):
+3. Add API key configurations in `.env` (Google AI Studio & Platform Tokens):
    ```env
    # Gemini AI API Key
    GEMINI_API_KEY=AIzaSy...
@@ -112,59 +116,59 @@ D:\chatbot_llm\
    # WhatsApp Fonnte
    FONNTE_TOKEN=your_fonnte_token
    ```
-4. Jalankan migrasi database dan isi dengan data contoh (Seeder):
+4. Run database migrations and seed it with dummy data:
    ```bash
    php artisan migrate
    php artisan db:seed
    ```
 
-### 2. Setup Frontend (React)
+### 2. Frontend Setup (React)
 
-1. Masuk ke folder frontend dan install dependensi:
+1. Navigate to the frontend folder and install dependencies:
    ```bash
    cd ../frontend
    npm install
    ```
-2. Jalankan server pembangunan lokal frontend:
+2. Start the local frontend development server:
    ```bash
    npm run dev
    ```
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## 🚀 How to Run the Application
 
-Aplikasi membutuhkan tiga proses berjalan bersamaan agar fitur Webhook asinkron berjalan mulus di localhost:
+The application requires three processes running simultaneously for the asynchronous Webhook feature to work smoothly on localhost:
 
-### 1. Jalankan API Server (Terminal 1)
+### 1. Run the API Server (Terminal 1)
 ```bash
 cd backend
 php artisan serve
 ```
 
-### 2. Jalankan Queue Worker (Terminal 2)
+### 2. Run the Queue Worker (Terminal 2)
 ```bash
 cd backend
 php artisan queue:work --timeout=90
 ```
 
-### 3. Jalankan ngrok tunnel (Terminal 3)
+### 3. Run ngrok tunnel (Terminal 3)
 ```bash
 ngrok http 8000
 ```
-*Gunakan URL HTTPS publik ngrok untuk mendaftarkan webhook di Telegram BotFather (`/setWebhook`) atau di Dashboard Fonnte/Meta.*
+*Use the public HTTPS ngrok URL to register webhooks in Telegram BotFather (`/setWebhook`) or in the Fonnte/Meta Dashboard.*
 
 ---
 
-## 💬 Perintah Bot Telegram yang Tersedia
-* `/start` - Memulai percakapan baru dan mereset riwayat chat sesi ini.
-* `/clear` - Menghapus seluruh riwayat percakapan untuk memulai topik baru.
-* `/end` - Mengakhiri sesi chat saat ini dengan pesan perpisahan yang ramah.
-* `/help` - Menampilkan daftar perintah yang tersedia.
+## 💬 Available Telegram Bot Commands
+* `/start` - Starts a new conversation and resets the chat history for this session.
+* `/clear` - Clears the entire conversation history to start a new topic.
+* `/end` - Ends the current chat session with a friendly farewell message.
+* `/help` - Displays the list of available commands.
 
 ---
 
-## 📄 Dokumentasi Tambahan
-* Lengkapnya mengenai Route API: [Dokumentasi API](docs/api.md)
-* Struktur Database & Tabel: [Dokumentasi Database](docs/database.md)
-* Alur Detail Sistem: [Dokumentasi Arsitektur](docs/architecture.md)
+## 📄 Additional Documentation
+* Complete API Routes: [API Documentation](docs/api.md)
+* Database Structure & Tables: [Database Documentation](docs/database.md)
+* Detailed System Flow: [Architecture Documentation](docs/architecture.md)
