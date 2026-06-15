@@ -45,8 +45,8 @@ class TelegramWebhookController extends Controller
         $userName  = trim("{$firstName} {$lastName}") ?: null;
         $sessionId = 'tg_' . $chatId;
 
-        // Dispatch job — return 200 sekarang, proses Gemini di background
-        ProcessTelegramMessage::dispatch($chatId, $text, $userName, $sessionId);
+        // Proses langsung secara sinkron tanpa queue
+        ProcessTelegramMessage::dispatchSync($chatId, $text, $userName, $sessionId);
 
         return response()->json(['ok' => true]);
     }
