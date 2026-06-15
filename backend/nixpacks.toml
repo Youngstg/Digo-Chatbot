@@ -1,6 +1,0 @@
-[phases.build]
-cmds = [
-    'composer install --no-dev --optimize-autoloader',
-    'php artisan config:cache || true',
-    'php artisan route:cache || true'
-]
