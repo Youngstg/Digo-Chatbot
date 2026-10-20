@@ -12,8 +12,28 @@ export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
   private ai: GoogleGenAI | null = null;
   private readonly models: string[] = [];
-  private readonly rateLimitCooldownMs = 3600 * 1000; // 1 jam cooldown
+  private readonly rateLimitCooldownMs = 3600 * 1000; // 1 jam cooldown untuk rate limit
   private readonly cooldowns: Map<string, number> = new Map(); // model -> timestamp expire
+
+  // Urutan default fallback berdasarkan kuota akun aktif:
+  // 1. gemini-3.8-flash (20 RPD) - Kualitas persona terbaik
+  // 2. gemini-3.6-flash (20 RPD) - Cadangan Flash Tier 1
+  // 3. gemini-3-flash   (20 RPD) - Cadangan Flash Tier 1
+  // 4. gemini-3.1-flash-lite (500 RPD) - Workhorse utama (cepat, kuota besar)
+  // 5. gemini-3.5-flash-lite (500 RPD) - Workhorse kedua (cepat, kuota besar)
+  // 6. gemini-2.5-flash-lite (20 RPD)  - Cadangan Flash Lite
+  // 7. gemma-4-31b-it   (14,400 RPD) - Cadangan Kuota Super (Open Model 31B)
+  // 8. gemma-4-26b-it   (14,400 RPD) - Cadangan Kuota Super (Open Model 26B)
+  private readonly defaultModels: string[] = [
+    'gemini-3.8-flash',
+    'gemini-3.6-flash',
+    'gemini-3-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash-lite',
+    'gemma-4-31b-it',
+    'gemma-4-26b-it',
+  ];
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
@@ -23,14 +43,39 @@ export class GeminiService {
       this.logger.warn('GEMINI_API_KEY belum disetel di environment!');
     }
 
-    const primaryModel = this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.5-flash';
-    const fallback1 = this.configService.get<string>('GEMINI_FALLBACK_1') || 'gemini-2.0-flash';
-    const fallback2 = this.configService.get<string>('GEMINI_FALLBACK_2') || 'gemini-1.5-flash';
-    const fallback3 = this.configService.get<string>('GEMINI_FALLBACK_3');
+    // Jika pengguna menyetel GEMINI_MODELS (koma-terpisah), gunakan list tersebut
+    const envModels = this.configService.get<string>('GEMINI_MODELS');
+    if (envModels && envModels.trim().length > 0) {
+      this.models = envModels
+        .split(',')
+        .map((m) => m.trim())
+        .filter(Boolean);
+    } else {
+      // Periksa individual keys jika ada kustomisasi spesifik
+      const primary = this.configService.get<string>('GEMINI_MODEL');
+      const fb1 = this.configService.get<string>('GEMINI_FALLBACK_1');
+      const fb2 = this.configService.get<string>('GEMINI_FALLBACK_2');
+      const fb3 = this.configService.get<string>('GEMINI_FALLBACK_3');
 
-    this.models = [primaryModel, fallback1, fallback2, fallback3].filter(
-      (m): m is string => Boolean(m && m.trim().length > 0)
-    );
+      const customList = [primary, fb1, fb2, fb3].filter(
+        (m): m is string => Boolean(m && m.trim().length > 0)
+      );
+
+      if (customList.length > 0) {
+        // Gabungkan kustomisasi dengan default models agar rantai fallback tetap lengkap
+        const combined = [...customList];
+        for (const def of this.defaultModels) {
+          if (!combined.includes(def)) {
+            combined.push(def);
+          }
+        }
+        this.models = combined;
+      } else {
+        this.models = [...this.defaultModels];
+      }
+    }
+
+    this.logger.log(`Daftar rantai model fallback aktif (${this.models.length} model): ${this.models.join(' -> ')}`);
   }
 
   public getModels(): string[] {
@@ -54,8 +99,8 @@ export class GeminiService {
       }
     }
 
-    // Format riwayat pesan untuk Google Gen AI SDK
-    const contents = messages
+    // Format riwayat pesan dasar untuk Google Gen AI SDK
+    const baseContents = messages
       .filter((msg) => msg.role !== 'system')
       .map((msg) => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
@@ -68,11 +113,11 @@ export class GeminiService {
         continue;
       }
 
-      const result = await this.tryModel(model, contents, systemPrompt);
+      const result = await this.tryModel(model, baseContents, systemPrompt);
       if (result !== null) {
         return result;
       }
-      // result null = rate limited (429/503), lanjut ke model berikutnya
+      // result null = rate limited (429/503) atau model tidak tersedia (404), lanjut ke model berikutnya
     }
 
     return 'Maaf, semua model AI sedang sibuk atau kuota tercapai. Silakan coba beberapa saat lagi. 🙏';
@@ -87,13 +132,33 @@ export class GeminiService {
     systemPrompt: string
   ): Promise<string | null> {
     try {
-      this.logger.log(`Mengirim request ke Gemini model: ${model}`);
+      this.logger.log(`Mengirim request ke model: ${model}`);
+
+      // Model Gemma biasanya tidak mendukung config.systemInstruction terpisah,
+      // sehingga system prompt dimasukkan ke konten pertama
+      const isGemma = model.toLowerCase().includes('gemma');
+      let instruction: string | undefined = systemPrompt || undefined;
+      let targetContents = contents;
+
+      if (isGemma) {
+        instruction = undefined;
+        if (systemPrompt && targetContents.length > 0) {
+          const firstText = targetContents[0].parts[0]?.text || '';
+          targetContents = [
+            {
+              role: 'user',
+              parts: [{ text: `[INSTRUKSI]\n${systemPrompt}\n\n[PESAN]\n${firstText}` }],
+            },
+            ...targetContents.slice(1),
+          ];
+        }
+      }
 
       const response = await this.ai!.models.generateContent({
         model,
-        contents,
+        contents: targetContents,
         config: {
-          systemInstruction: systemPrompt || undefined,
+          systemInstruction: instruction,
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
@@ -116,14 +181,28 @@ export class GeminiService {
         errorMessage.includes('RESOURCE_EXHAUSTED');
 
       if (isRateLimit) {
-        this.logger.warn(`Model ${model} terkena rate limit: ${errorMessage}. Mengaktifkan cooldown.`);
+        this.logger.warn(`Model ${model} terkena rate limit: ${errorMessage}. Cooldown aktif.`);
         this.setRateLimit(model);
         return null; // Coba model fallback berikutnya
       }
 
+      // Cek apakah error karena model 404 / deprecated / not found
+      const isNotFound =
+        statusCode === 404 ||
+        errorMessage.includes('404') ||
+        errorMessage.includes('NOT_FOUND') ||
+        errorMessage.includes('no longer available') ||
+        errorMessage.includes('not found');
+
+      if (isNotFound) {
+        this.logger.warn(`Model ${model} tidak tersedia/deprecated: ${errorMessage}. Menandai cooldown 24 jam.`);
+        this.cooldowns.set(model, Date.now() + 24 * 3600 * 1000);
+        return null; // Coba model fallback berikutnya
+      }
+
       this.logger.error(`Error pada model ${model}: ${errorMessage}`, error?.stack);
-      // Jika error non-quota (misal prompt violation atau internal error) kembalikan pesan ramah
-      return 'Maaf, terjadi kendala saat memproses respons AI. Mohon coba ulangi pertanyaan Anda.';
+      // Untuk error lain, coba fallback berikutnya agar chatbot tetap responsif
+      return null;
     }
   }
 
@@ -142,9 +221,6 @@ export class GeminiService {
     this.cooldowns.set(model, Date.now() + this.rateLimitCooldownMs);
   }
 
-  /**
-   * Bersihkan format teks (bintang markdown jika ada) agar ramah WhatsApp & Telegram
-   */
   private cleanText(text: string): string {
     return text.trim();
   }
