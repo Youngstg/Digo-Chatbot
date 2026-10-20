@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build Frontend & Deploy All
+    name: Build & Deploy Digo Chatbot
     runs-on: ubuntu-latest
 
     steps:
@@ -18,14 +18,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
 
-      - name: Build Frontend
+      - name: Build Frontend (React)
         working-directory: frontend
         run: |
           npm ci
           VITE_API_BASE_URL=/api npm run build
+
+      - name: Build Backend (NestJS)
+        working-directory: backend
+        env:
+          DATABASE_URL: "mysql://placeholder:placeholder@localhost:3306/db"
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
 
       - name: Deploy to Tencent Cloud Server
         env:
@@ -40,33 +47,21 @@ jobs:
           echo "Ensuring remote directories exist..."
           ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "mkdir -p /var/www/digo-chatbot/backend /var/www/digo-chatbot/frontend/dist"
 
-          echo "Syncing frontend build..."
+          echo "Syncing frontend static build..."
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete frontend/dist/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/frontend/dist/"
 
-          echo "Syncing backend code..."
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
-            --exclude='.git' \
-            --exclude='vendor' \
-            --exclude='.env' \
-            --exclude='node_modules' \
-            --exclude='storage/logs/*' \
-            --exclude='storage/framework/cache/*' \
-            backend/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/"
+          echo "Syncing backend compiled dist..."
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete backend/dist/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/dist/"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" backend/prisma/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/prisma/"
+          scp -o StrictHostKeyChecking=no backend/package.json backend/package-lock.json "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/"
 
-          echo "Running Composer and Laravel tasks on server..."
+          echo "Installing production dependencies, running Prisma migrations & restarting PM2..."
           ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
             cd /var/www/digo-chatbot/backend &&
-            if [ ! -f .env ]; then
-              cp .env.example .env
-              php artisan key:generate
-            fi &&
-            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader &&
-            php artisan migrate --force &&
-            php artisan storage:link || true &&
-            php artisan config:cache &&
-            php artisan route:cache &&
-            sudo chown -R www-data:ubuntu storage bootstrap/cache &&
-            sudo chmod -R 775 storage bootstrap/cache &&
-            sudo systemctl reload php8.3-fpm
+            npm ci --omit=dev --prefer-offline &&
+            npx prisma generate &&
+            npx prisma migrate deploy &&
+            (pm2 describe digo-backend > /dev/null 2>&1 && pm2 restart digo-backend --update-env || PORT=8000 pm2 start dist/main.js --name digo-backend) &&
+            pm2 save
           "
           echo "✅ Digo-Chatbot successfully deployed!"
