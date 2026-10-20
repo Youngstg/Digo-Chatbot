@@ -22,7 +22,7 @@ jobs:
       - name: Build Frontend (React)
         working-directory: frontend
         run: |
-          npm ci
+          npm install
           VITE_API_BASE_URL=/api npm run build
 
       - name: Build Backend (NestJS)
@@ -30,7 +30,7 @@ jobs:
         env:
           DATABASE_URL: "mysql://placeholder:placeholder@localhost:3306/db"
         run: |
-          npm ci
+          npm install
           npx prisma generate
           npm run build
 
@@ -58,7 +58,7 @@ jobs:
           echo "Installing production dependencies, running Prisma migrations & restarting PM2..."
           ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
             cd /var/www/digo-chatbot/backend &&
-            npm ci --omit=dev --prefer-offline &&
+            npm install --omit=dev --prefer-offline &&
             npx prisma generate &&
             npx prisma migrate deploy &&
             (pm2 describe digo-backend > /dev/null 2>&1 && pm2 restart digo-backend --update-env || PORT=8000 pm2 start dist/main.js --name digo-backend) &&
