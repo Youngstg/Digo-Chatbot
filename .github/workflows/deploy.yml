@@ -1,0 +1,72 @@
+name: Deploy Digo-Chatbot to Tencent Cloud
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build Frontend & Deploy All
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          VITE_API_BASE_URL=/api npm run build
+
+      - name: Deploy to Tencent Cloud Server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          echo "Ensuring remote directories exist..."
+          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "mkdir -p /var/www/digo-chatbot/backend /var/www/digo-chatbot/frontend/dist"
+
+          echo "Syncing frontend build..."
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete frontend/dist/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/frontend/dist/"
+
+          echo "Syncing backend code..."
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+            --exclude='.git' \
+            --exclude='vendor' \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/*' \
+            backend/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/"
+
+          echo "Running Composer and Laravel tasks on server..."
+          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
+            cd /var/www/digo-chatbot/backend &&
+            if [ ! -f .env ]; then
+              cp .env.example .env
+              php artisan key:generate
+            fi &&
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader &&
+            php artisan migrate --force &&
+            php artisan storage:link || true &&
+            php artisan config:cache &&
+            php artisan route:cache &&
+            sudo chown -R www-data:ubuntu storage bootstrap/cache &&
+            sudo chmod -R 775 storage bootstrap/cache &&
+            sudo systemctl reload php8.3-fpm
+          "
+          echo "✅ Digo-Chatbot successfully deployed!"

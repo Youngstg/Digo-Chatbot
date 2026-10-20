@@ -1,59 +1,158 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Digo Chatbot Backend (NestJS + TypeScript) 🤖
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend REST API & Webhook Service untuk **Digo AI Sales Assistant** yang telah direfactor dari Laravel ke **NestJS**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Teknologi Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Framework:** NestJS (Node.js v24+ / Express)
+- **Bahasa:** TypeScript
+- **Database & ORM:** MySQL + Prisma ORM
+- **AI Engine:** Google Gen AI SDK (`@google/genai`) dengan *Multi-Model Fallback* & *Cooldown Rate Limit*
+- **Background Queue:** BullMQ (didukung Redis untuk Ubuntu / production, dengan fallback in-memory untuk dev lokal)
+- **Integrasi Multi-Channel:**
+  - Web Chat API
+  - Telegram Bot API Webhook
+  - Meta WhatsApp Cloud API Webhook
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📁 Struktur Direktori
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```
+src/
+├── main.ts                           # Entry point aplikasi (port, CORS, prefix /api)
+├── app.module.ts                     # Root Module
+├── app.controller.ts                 # Root info & /api/health check
+├── prisma/
+│   ├── prisma.service.ts             # Koneksi Database Prisma
+│   └── prisma.module.ts              # Global Prisma Module
+├── prompts/
+│   └── sales-assistant.prompt.ts     # System Prompt persona Digo AI
+└── modules/
+    ├── gemini/                       # GeminiService (SDK @google/genai + Fallback)
+    ├── conversation/                 # Conversation & Message History Service
+    ├── knowledge-base/               # Knowledge Base & Service context retrieval (CRUD)
+    ├── leads/                        # Leads capture & status update
+    ├── chat/                         # Web Chat Widget controller & service
+    ├── queue/                        # BullMQ + Redis / In-memory queue processor
+    ├── telegram/                     # Telegram Bot Webhook & command handler (/start, /clear, /end, /help)
+    └── whatsapp/                     # WhatsApp Cloud API & Fonnte webhook handlers
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## ⚙️ Konfigurasi Environment (`.env`)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Buat atau sesuaikan file `.env` di folder `backend/`:
 
-### Premium Partners
+```env
+PORT=8000
+DATABASE_URL="mysql://root:password@127.0.0.1:3306/chatbot_llm"
+FRONTEND_URL="http://localhost:5173"
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Gemini AI (Google Gen AI SDK)
+GEMINI_API_KEY="isi_dengan_gemini_api_key"
+GEMINI_MODEL="gemini-2.5-flash"
+GEMINI_FALLBACK_1="gemini-2.0-flash"
+GEMINI_FALLBACK_2="gemini-1.5-flash"
 
-## Contributing
+# Telegram Bot
+TELEGRAM_BOT_TOKEN="isi_dengan_token_bot_telegram"
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# WhatsApp Cloud API (Meta)
+WHATSAPP_TOKEN=""
+WHATSAPP_PHONE_NUMBER_ID=""
+WHATSAPP_VERIFY_TOKEN="digo_webhook_secret"
+WHATSAPP_API_VERSION="v18.0"
 
-## Code of Conduct
+# Fonnte (Alternatif WhatsApp Gateway)
+FONNTE_TOKEN=""
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Redis (Untuk BullMQ di Ubuntu / Production)
+REDIS_HOST="127.0.0.1"
+REDIS_PORT=6379
+REDIS_PASSWORD=""
+```
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🛠️ Menjalankan di Lokal (Windows)
 
-## License
+1. **Install dependensi (sudah terinstal):**
+   ```bash
+   npm install --legacy-peer-deps
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+2. **Generate Prisma Client:**
+   ```bash
+   npm run prisma:generate
+   ```
+
+3. **Sinkronisasi Database (Jika membuat tabel baru):**
+   ```bash
+   npm run prisma:migrate
+   ```
+
+4. **Jalankan Mode Pengembangan:**
+   ```bash
+   npm run dev
+   # Server berjalan di http://localhost:8000/api
+   ```
+
+---
+
+## 🐧 Panduan Deploy ke Ubuntu (Production)
+
+Saat mendeploy ke server Ubuntu:
+
+1. **Install Node.js 22/24 & Redis:**
+   ```bash
+   # Install Redis server
+   sudo apt update
+   sudo apt install -y redis-server
+   sudo systemctl enable --now redis-server
+
+   # Cek status Redis
+   redis-cli ping # Menghasilkan: PONG
+   ```
+
+2. **Setup Project di Ubuntu:**
+   ```bash
+   cd backend
+   npm install --production=false --legacy-peer-deps
+   npm run prisma:generate
+   npm run build
+   ```
+
+3. **Jalankan dengan Process Manager (PM2):**
+   ```bash
+   sudo npm install -g pm2
+   pm2 start dist/main.js --name digo-backend
+   pm2 save
+   pm2 startup
+   ```
+
+---
+
+## 📡 Daftar Endpoint API
+
+Semua endpoint diawali dengan prefix `/api`:
+
+| Method | Endpoint | Keterangan |
+| :--- | :--- | :--- |
+| `GET` | `/api/health` | Cek status database, cache, dan Gemini model |
+| `POST` | `/api/chat` | Web Chat Widget (AI conversation) |
+| `GET` | `/api/knowledge-base` | Ambil semua daftar Knowledge Base |
+| `POST` | `/api/knowledge-base` | Tambah entry Knowledge Base baru |
+| `PUT` | `/api/knowledge-base/:id` | Update data Knowledge Base |
+| `DELETE` | `/api/knowledge-base/:id` | Hapus data Knowledge Base |
+| `GET` | `/api/leads` | Ambil data Leads / Calon Pelanggan |
+| `POST` | `/api/leads` | Simpan data Lead baru |
+| `PUT` | `/api/leads/:id` | Update status Lead (`new`, `contacted`, `qualified`, `closed`) |
+| `POST` | `/api/webhook/telegram` | Webhook pesan masuk Telegram Bot |
+| `POST` | `/api/webhook/telegram/set` | Daftarkan URL Webhook ke Telegram |
+| `POST` | `/api/webhook/telegram/delete` | Hapus Webhook Telegram |
+| `GET` | `/api/webhook/whatsapp` | Verifikasi Meta Webhook (Hub Challenge) |
+| `POST` | `/api/webhook/whatsapp` | Webhook pesan masuk Meta WhatsApp Cloud API |

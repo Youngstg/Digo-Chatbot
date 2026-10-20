@@ -2,17 +2,11 @@
 # AI Sales Assistant Chatbot
 # ===========================
 
-# Backend (Laravel)
+# Backend (NestJS & Backup)
 backend/.env
-backend/vendor/
+backend/dist/
 backend/node_modules/
-backend/storage/logs/*.log
-backend/storage/framework/cache/
-backend/storage/framework/sessions/
-backend/storage/framework/views/
-backend/bootstrap/cache/*.php
-backend/.phpunit.cache/
-backend/public/hot
+backend-laravel-backup/
 
 # Frontend (React/Vite)
 frontend/.env
@@ -29,3 +23,17 @@ frontend/dist/
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Internal installation and deployment guides
+INSTALLATION_GUIDE.md
+INSTALLATION.md
+DEPLOYMENT.md
+
+# AI & Agent artifacts
+.agents/
+.gemini/
+.kilo/
+skills/
+skills-lock.json
+*.bak
+scratch/
