@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
+import nodeFetch from 'node-fetch';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -36,16 +39,7 @@ export class GeminiService {
   ];
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-    const baseUrl = this.configService.get<string>('GEMINI_BASE_URL');
-    if (apiKey) {
-      this.ai = new GoogleGenAI({
-        apiKey,
-        ...(baseUrl ? { httpOptions: { baseUrl } } : {}),
-      });
-    } else {
-      this.logger.warn('GEMINI_API_KEY belum disetel di environment!');
-    }
+    this.ai = this.createClient();
 
     // Jika pengguna menyetel GEMINI_MODELS (koma-terpisah), gunakan list tersebut
     const envModels = this.configService.get<string>('GEMINI_MODELS');
@@ -82,6 +76,50 @@ export class GeminiService {
     this.logger.log(`Daftar rantai model fallback aktif (${this.models.length} model): ${this.models.join(' -> ')}`);
   }
 
+  private createClient(): GoogleGenAI | null {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    if (!apiKey) {
+      this.logger.warn('GEMINI_API_KEY belum disetel di environment!');
+      return null;
+    }
+
+    const baseUrl = this.configService.get<string>('GEMINI_BASE_URL');
+    const proxyUrl =
+      this.configService.get<string>('GEMINI_PROXY') ||
+      this.configService.get<string>('HTTPS_PROXY') ||
+      this.configService.get<string>('HTTP_PROXY') ||
+      this.configService.get<string>('ALL_PROXY');
+
+    const httpOptions: Record<string, any> = {};
+
+    if (baseUrl && baseUrl.trim().length > 0) {
+      httpOptions.baseUrl = baseUrl.trim();
+      this.logger.log(`GeminiService menggunakan Base URL custom: ${baseUrl}`);
+    }
+
+    if (proxyUrl && proxyUrl.trim().length > 0) {
+      const trimmedProxy = proxyUrl.trim();
+      const isSocks = trimmedProxy.startsWith('socks');
+      const agent = isSocks
+        ? new SocksProxyAgent(trimmedProxy)
+        : new HttpsProxyAgent(trimmedProxy);
+
+      httpOptions.fetch = (input: any, init?: any) => {
+        return (nodeFetch as any)(input, {
+          ...init,
+          agent,
+        });
+      };
+
+      this.logger.log(`GeminiService menggunakan Proxy: ${trimmedProxy}`);
+    }
+
+    return new GoogleGenAI({
+      apiKey,
+      ...(Object.keys(httpOptions).length > 0 ? { httpOptions } : {}),
+    });
+  }
+
   public getModels(): string[] {
     return [...this.models];
   }
@@ -95,10 +133,8 @@ export class GeminiService {
    */
   async chat(messages: ChatMessage[], systemPrompt: string = ''): Promise<string> {
     if (!this.ai) {
-      const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-      if (apiKey) {
-        this.ai = new GoogleGenAI({ apiKey });
-      } else {
+      this.ai = this.createClient();
+      if (!this.ai) {
         return 'Maaf, kunci API AI (GEMINI_API_KEY) belum dikonfigurasi di server.';
       }
     }
@@ -202,6 +238,12 @@ export class GeminiService {
         this.logger.warn(`Model ${model} tidak tersedia/deprecated: ${errorMessage}. Menandai cooldown 24 jam.`);
         this.cooldowns.set(model, Date.now() + 24 * 3600 * 1000);
         return null; // Coba model fallback berikutnya
+      }
+
+      if (errorMessage.includes('User location is not supported')) {
+        this.logger.error(
+          `Google Gemini memblokir IP server karena lokasi wilayah: "User location is not supported". Pastikan Cloudflare WARP aktif dalam proxy mode (warp-cli mode proxy && warp-cli connect) dan GEMINI_PROXY="socks5://127.0.0.1:40000" disetel di .env.`
+        );
       }
 
       this.logger.error(`Error pada model ${model}: ${errorMessage}`, error?.stack);
