@@ -37,8 +37,12 @@ export class GeminiService {
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    const baseUrl = this.configService.get<string>('GEMINI_BASE_URL');
     if (apiKey) {
-      this.ai = new GoogleGenAI({ apiKey });
+      this.ai = new GoogleGenAI({
+        apiKey,
+        ...(baseUrl ? { httpOptions: { baseUrl } } : {}),
+      });
     } else {
       this.logger.warn('GEMINI_API_KEY belum disetel di environment!');
     }
