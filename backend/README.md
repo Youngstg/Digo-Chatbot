@@ -118,11 +118,13 @@ Saat mendeploy ke server Ubuntu:
    redis-cli ping # Menghasilkan: PONG
    ```
 
-2. **Setup Project di Ubuntu:**
+2. **Setup Project & Database di Ubuntu:**
    ```bash
-   cd backend
+   cd /var/www/digo-chatbot/backend
    npm install --production=false --legacy-peer-deps
-   npm run prisma:generate
+   npx prisma generate
+   npx prisma db push      # Sinkronisasi tabel ke database MySQL
+   npm run prisma:seed     # Isi data layanan & knowledge base awal
    npm run build
    ```
 

@@ -17,6 +17,8 @@
     "start:prod": "node dist/main",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "node prisma/seed.js",
     "prisma:studio": "prisma studio",
     "lint": "oxlint --type-aware src/ test/",
     "test": "vitest run",
@@ -60,5 +62,8 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.2"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
