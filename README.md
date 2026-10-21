@@ -18,7 +18,7 @@
   </p>
 
   <p align="center">
-    🌐 <strong>Live Demo:</strong> <a href="https://digo-bot.mooo.com" target="_blank">https://digo-bot.mooo.com</a>
+    🌐 <strong>Live Demo:</strong> <a href="https://digo.us.ci" target="_blank">https://digo.us.ci</a>
   </p>
 </div>
 
