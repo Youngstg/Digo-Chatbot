@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://digo-bot.mooo.com/sitemap.xml
+Sitemap: https://digo.us.ci/sitemap.xml
