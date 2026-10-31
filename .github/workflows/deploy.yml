@@ -53,14 +53,15 @@ jobs:
           echo "Syncing backend compiled dist..."
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete backend/dist/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/dist/"
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" backend/prisma/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/prisma/"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" backend/scripts/ "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/scripts/"
           scp -o StrictHostKeyChecking=no backend/package.json backend/package-lock.json "$SERVER_USER@$SERVER_IP:/var/www/digo-chatbot/backend/"
 
-          echo "Installing production dependencies, running Prisma migrations & restarting PM2..."
+          echo "Installing production dependencies, syncing Prisma schema & restarting PM2..."
           ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
             cd /var/www/digo-chatbot/backend &&
             npm install --omit=dev --prefer-offline &&
             npx prisma generate &&
-            npx prisma migrate deploy &&
+            npx prisma db push --skip-generate &&
             (pm2 describe digo-backend > /dev/null 2>&1 && pm2 restart digo-backend --update-env || PORT=8000 pm2 start dist/main.js --name digo-backend) &&
             pm2 save
           "
