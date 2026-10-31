@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../store/AuthContext";
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
   const [showPopup, setShowPopup] = useState(true);
 
   // Auto-close the popup after 1 seconds
@@ -47,10 +49,10 @@ export default function LandingPage() {
 
         <div className="flex items-center space-x-4">
           <Link
-            to="/admin"
+            to={isAuthenticated ? "/admin" : "/login"}
             className="px-6 py-2 bg-[#111844] text-[#EAE0CF] text-sm font-semibold rounded-full shadow hover:bg-[#4B5694] transition-colors"
           >
-            Login
+            {isAuthenticated ? "Dashboard" : "Login"}
           </Link>
         </div>
       </nav>

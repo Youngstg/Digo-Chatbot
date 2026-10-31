@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -194,6 +195,28 @@ async function main() {
     if (!existing) {
       await prisma.knowledgeBase.create({ data: entry });
     }
+  }
+
+  // 4. Seed Default Admin
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const existingAdmin = await prisma.admin.findFirst({
+    where: {
+      OR: [{ username: adminUsername }, { email: 'admin@digo.id' }],
+    },
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    await prisma.admin.create({
+      data: {
+        username: adminUsername,
+        email: 'admin@digo.id',
+        password: hashedPassword,
+        name: 'Administrator Digo',
+      },
+    });
+    console.log(`👤 Admin default dibuat: ${adminUsername} / ${adminPassword}`);
   }
 
   console.log('✅ Seeding database selesai!');

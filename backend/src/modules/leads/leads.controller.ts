@@ -8,16 +8,19 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service.js';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { UpdateLeadStatusDto } from './dto/update-lead-status.dto.js';
+import { AuthGuard } from '../auth/auth.guard.js';
 
 @Controller('leads')
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
   @Get()
+  @UseGuards(AuthGuard)
   async index() {
     const data = await this.leadsService.findAll();
     return { data };
@@ -34,6 +37,7 @@ export class LeadsController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateLeadStatusDto

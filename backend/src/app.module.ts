@@ -7,6 +7,7 @@ import { GeminiModule } from './modules/gemini/gemini.module.js';
 import { ConversationModule } from './modules/conversation/conversation.module.js';
 import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module.js';
 import { LeadsModule } from './modules/leads/leads.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
 import { ChatModule } from './modules/chat/chat.module.js';
 import { TelegramModule } from './modules/telegram/telegram.module.js';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module.js';
@@ -23,6 +24,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module.js';
     ConversationModule,
     KnowledgeBaseModule,
     LeadsModule,
+    AuthModule,
     ChatModule,
     TelegramModule,
     WhatsAppModule,

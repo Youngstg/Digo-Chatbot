@@ -9,10 +9,31 @@ const api = axios.create({
   timeout: 30000,
 })
 
-// Response interceptor for error handling
+// Request interceptor: lampirkan JWT token jika tersedia
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('digo_admin_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Response interceptor: penanganan error & auto-logout jika 401
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('digo_admin_token')
+      localStorage.removeItem('digo_admin_user')
+
+      // Jika sedang berada di halaman /admin, redirect ke /login
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/login'
+      }
+    }
     console.error('API Error:', error.response?.data || error.message)
     return Promise.reject(error)
   }

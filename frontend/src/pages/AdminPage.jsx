@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../store/AuthContext'
 import { leadService } from '../services/leadService'
 import { knowledgeBaseService } from '../services/knowledgeBaseService'
 
@@ -12,6 +14,8 @@ const STATUS_LABELS = {
 const CATEGORIES = ['service', 'pricing', 'faq', 'portfolio', 'promotion', 'policy']
 
 export default function AdminPage() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('leads')
 
   // Leads State
@@ -98,18 +102,38 @@ export default function AdminPage() {
     }
   }
 
+  const handleLogout = async () => {
+    if (window.confirm("Apakah Anda yakin ingin logout dari sesi admin?")) {
+      await logout()
+      navigate('/login')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#EAE0CF]/30 font-sans">
       {/* Admin Navbar */}
-      <nav className="bg-[#111844] text-[#EAE0CF] px-8 py-4 flex items-center justify-between shadow-md border-b-4 border-[#4B5694]">
+      <nav className="bg-[#111844] text-[#EAE0CF] px-6 md:px-8 py-4 flex items-center justify-between shadow-md border-b-4 border-[#4B5694]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 flex items-center justify-center">
+          <Link to="/" title="Ke Beranda" className="w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity">
             <img src="/image/Logo_only.png" alt="Logo" className="w-full h-full object-contain mix-blend-multiply brightness-200" />
-          </div>
+          </Link>
           <span className="font-bold text-lg tracking-wide">Admin Dashboard</span>
         </div>
-        <div className="text-sm font-medium text-[#7288AE]">
-          Control Panel
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-2 bg-[#4B5694]/30 border border-[#7288AE]/40 px-3 py-1.5 rounded-full text-xs text-[#EAE0CF]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-semibold">{user?.name || user?.username || 'Admin'}</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white px-3.5 py-1.5 rounded-lg border border-red-500/40 transition-all cursor-pointer"
+            title="Keluar dari sesi admin"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Keluar
+          </button>
         </div>
       </nav>
 
